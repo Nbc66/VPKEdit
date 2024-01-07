@@ -16,7 +16,6 @@ jobs:
   build-msvc:
     strategy:
       matrix:
-        target: [github, strata]
         build_type: [Debug, Release]
         compiler: [msvc]
     runs-on: windows-latest
@@ -35,8 +34,7 @@ jobs:
           arch: x64
           spectre: true
 
-      - name: Install Qt
-        if: ${{ matrix.target == 'github' }}
+      - name: Install Host Qt
         uses: jurplel/install-qt-action@v3
         with:
           aqtversion: '==3.1.*'
@@ -48,16 +46,6 @@ jobs:
           modules: ${{env.QT_MODULES}}
           cache: true
 
-      - name: Install Strata Qt
-        if: ${{ matrix.target == 'strata' }}
-        shell: cmd
-        run: |
-          curl -L "https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz" -o qt6.tar.gz
-          7z x qt6.tar.gz
-          7z x qt6.tar
-          mkdir "${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}"
-          move "${{github.workspace}}/opt/qt6" "${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/msvc2019_64"
-
       - name: Configure CMake
         run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/msvc2019_64"
 
@@ -68,7 +56,6 @@ jobs:
           cmake --build . --config ${{matrix.build_type}} -t vpkedit -- -j%NUMBER_OF_PROCESSORS%
 
       - name: Upload Standalone CLI
-        if: ${{ matrix.target == 'github' }}
         uses: actions/upload-artifact@v3
         with:
           name: VPKEdit-Windows-Standalone-CLI-${{matrix.compiler}}-${{matrix.build_type}}
@@ -79,7 +66,6 @@ jobs:
           retention-days: 7
 
       - name: Upload Standalone GUI
-        if: ${{ matrix.target == 'github' }}
         uses: actions/upload-artifact@v3
         with:
           name: VPKEdit-Windows-Standalone-GUI-${{matrix.compiler}}-${{matrix.build_type}}
@@ -94,26 +80,11 @@ jobs:
             ${{env.BUILD_DIR}}/tls/*.dll
           retention-days: 7
 
-      - name: Upload Strata Source GUI
-        if: ${{ matrix.target == 'strata' }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: VPKEdit-Windows-Strata-Source-GUI-${{matrix.compiler}}-${{matrix.build_type}}
-          path: |
-            ${{env.BUILD_DIR}}/vpkedit.exe
-            ${{env.BUILD_DIR}}/vtflib*.dll
-            ${{env.BUILD_DIR}}/Qt6OpenGL*.dll
-            ${{env.BUILD_DIR}}/Qt6OpenGLWidgets*.dll
-            ${{env.BUILD_DIR}}/opengl32sw*.dll
-          retention-days: 7
-
       - name: Create Installer
-        if: ${{ matrix.target == 'github' }}
         working-directory: ${{env.BUILD_DIR}}
         run: cpack
 
       - name: Upload Installer
-        if: ${{ matrix.target == 'github' }}
         uses: actions/upload-artifact@v3
         with:
           name: VPKEdit-Windows-Installer-${{matrix.compiler}}-${{matrix.build_type}}
@@ -121,10 +92,71 @@ jobs:
             ${{env.BUILD_DIR}}/VPKEdit-*-win64.exe
           retention-days: 7
 
+  build-msvc-strata:
+    strategy:
+      matrix:
+        build_type: [Release]
+        compiler: [msvc]
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          spectre: true
+
+      - name: Install Host Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          aqtversion: '==3.1.*'
+          version: ${{env.QT_VERSION}}
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          dir: ${{github.workspace}}/qt-host
+          modules: ${{env.QT_MODULES}}
+          cache: true
+
+      - name: Install Strata Qt
+        shell: cmd
+        run: |
+          curl -L "https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz" -o qt6.tar.gz
+          7z x qt6.tar.gz
+          7z x qt6.tar
+          mkdir "${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}"
+          move "${{github.workspace}}/opt/qt6" "${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/msvc2019_64"
+          set QT_HOST_PATH="${{github.workspace}}/qt-host/Qt/${{env.QT_VERSION}}/msvc2019_64"
+
+      - name: Configure CMake
+        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/msvc2019_64"
+
+      - name: Build
+        working-directory: ${{env.BUILD_DIR}}
+        run: cmake --build . --config ${{matrix.build_type}} -t vpkedit -- -j%NUMBER_OF_PROCESSORS%
+
+      - name: Upload Strata Source GUI
+        uses: actions/upload-artifact@v3
+        with:
+          name: VPKEdit-Windows-Strata-Source-GUI-${{matrix.compiler}}-${{matrix.build_type}}
+          path: |
+            ${{env.BUILD_DIR}}/vpkedit.exe
+            ${{env.BUILD_DIR}}/vtflib.dll
+            ${{env.BUILD_DIR}}/Qt6OpenGL.dll
+            ${{env.BUILD_DIR}}/Qt6OpenGLWidgets.dll
+            ${{env.BUILD_DIR}}/opengl32sw.dll
+          retention-days: 7
+
   build-linux:
     strategy:
       matrix:
-        target: [github, strata]
         build_type: [Debug, Release]
         compiler: [gcc]
     runs-on: ubuntu-20.04
@@ -143,8 +175,7 @@ jobs:
           version: 11
           platform: x64
 
-      - name: Install Qt
-        if: ${{ matrix.target == 'github' }}
+      - name: Install Host Qt
         uses: jurplel/install-qt-action@v3
         with:
           aqtversion: '==3.1.*'
@@ -156,26 +187,16 @@ jobs:
           modules: ${{env.QT_MODULES}}
           cache: true
 
-      - name: Install Strata Qt
-        if: ${{ matrix.target == 'strata' }}
-        shell: bash
-        run: |
-          curl -L "https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz" -o qt6.tar.gz
-          tar -xzf qt6.tar.gz
-          mkdir -p "${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}"
-          mv "${{github.workspace}}/opt/qt6" "${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/gcc_64"
-
       - name: Configure CMake
         run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/gcc_64"
 
       - name: Build
         working-directory: ${{env.BUILD_DIR}}
         run: |
-          cmake --build . --config ${{matrix.build_type}} -t vpkedit -- -j$(nproc)
           cmake --build . --config ${{matrix.build_type}} -t vpkeditcli -- -j$(nproc)
+          cmake --build . --config ${{matrix.build_type}} -t vpkedit -- -j$(nproc)
 
       - name: Fixup Binaries
-        if: ${{ matrix.target == 'github' }}
         run: |
           chmod +x '${{env.BUILD_DIR}}/vpkedit'
 
@@ -190,7 +211,6 @@ jobs:
           done
 
       - name: Upload Standalone CLI
-        if: ${{ matrix.target == 'github' }}
         uses: actions/upload-artifact@v3
         with:
           name: VPKEdit-Linux-Standalone-CLI-${{matrix.compiler}}-${{matrix.build_type}}
@@ -201,7 +221,6 @@ jobs:
           retention-days: 7
 
       - name: Upload Standalone GUI
-        if: ${{ matrix.target == 'github' }}
         uses: actions/upload-artifact@v3
         with:
           name: VPKEdit-Linux-Standalone-GUI-${{matrix.compiler}}-${{matrix.build_type}}
@@ -222,6 +241,67 @@ jobs:
             ${{env.BUILD_DIR}}/xcbglintegrations/*.so*
           retention-days: 7
 
+      - name: Create Installer
+        working-directory: ${{env.BUILD_DIR}}
+        run: cpack
+
+      - name: Upload Installer
+        uses: actions/upload-artifact@v3
+        with:
+          name: VPKEdit-Linux-Installer-${{matrix.compiler}}-${{matrix.build_type}}
+          path: |
+            ${{env.BUILD_DIR}}/VPKEdit-*-Linux.deb
+          retention-days: 7
+
+  build-linux-strata:
+    strategy:
+      matrix:
+        build_type: [Release]
+        compiler: [gcc]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Necessary Packages
+        run: sudo apt update && sudo apt install -y cmake build-essential ninja-build
+
+      - name: Install GCC
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: 11
+          platform: x64
+
+      - name: Install Host Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          aqtversion: '==3.1.*'
+          version: ${{env.QT_VERSION}}
+          host: 'linux'
+          target: 'desktop'
+          arch: 'gcc_64'
+          dir: ${{github.workspace}}/qt-host
+          modules: ${{env.QT_MODULES}}
+          cache: true
+
+      - name: Install Strata Qt
+        shell: bash
+        run: |
+          curl -L "https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz" -o qt6.tar.gz
+          tar -xzf qt6.tar.gz
+          mkdir -p "${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}"
+          mv "${{github.workspace}}/opt/qt6" "${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/gcc_64"
+          export QT_HOST_PATH="${{github.workspace}}/qt-host/Qt/${{env.QT_VERSION}}/gcc_64"
+
+      - name: Configure CMake
+        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/gcc_64"
+
+      - name: Build
+        working-directory: ${{env.BUILD_DIR}}
+        run: cmake --build . --config ${{matrix.build_type}} -t vpkedit -- -j$(nproc)
+
       - name: Upload Strata Source GUI
         if: ${{ matrix.target == 'strata' }}
         uses: actions/upload-artifact@v3
@@ -232,18 +312,4 @@ jobs:
             ${{env.BUILD_DIR}}/vtflib.so*
             ${{env.BUILD_DIR}}/Qt6OpenGL.so*
             ${{env.BUILD_DIR}}/Qt6OpenGLWidgets.so*
-          retention-days: 7
-
-      - name: Create Installer
-        if: ${{ matrix.target == 'github' }}
-        working-directory: ${{env.BUILD_DIR}}
-        run: cpack
-
-      - name: Upload Installer
-        if: ${{ matrix.target == 'github' }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: VPKEdit-Linux-Installer-${{matrix.compiler}}-${{matrix.build_type}}
-          path: |
-            ${{env.BUILD_DIR}}/VPKEdit-*-Linux.deb
           retention-days: 7
