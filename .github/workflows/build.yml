@@ -55,6 +55,7 @@ jobs:
           curl -L https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz -o qt6.tar.gz
           7z x qt6.tar.gz
           7z x qt6.tar
+          mkdir ${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}
           move ${{github.workspace}}/opt/qt6 ${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/msvc2019_64
 
       - name: Configure CMake
@@ -100,10 +101,10 @@ jobs:
           name: VPKEdit-Windows-Strata-Source-GUI-${{matrix.compiler}}-${{matrix.build_type}}
           path: |
             ${{env.BUILD_DIR}}/vpkedit.exe
-            ${{env.BUILD_DIR}}/vtflib.dll
-            ${{env.BUILD_DIR}}/Qt6OpenGL.dll
-            ${{env.BUILD_DIR}}/Qt6OpenGLWidgets.dll
-            ${{env.BUILD_DIR}}/opengl32sw.dll
+            ${{env.BUILD_DIR}}/vtflib*.dll
+            ${{env.BUILD_DIR}}/Qt6OpenGL*.dll
+            ${{env.BUILD_DIR}}/Qt6OpenGLWidgets*.dll
+            ${{env.BUILD_DIR}}/opengl32sw*.dll
           retention-days: 7
 
       - name: Create Installer
@@ -161,6 +162,7 @@ jobs:
         run: |
           curl -L https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz -o qt6.tar.gz
           tar -xzf qt6.tar.gz
+          mkdir -p ${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}
           mv ${{github.workspace}}/opt/qt6 ${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/gcc_64
 
       - name: Configure CMake
