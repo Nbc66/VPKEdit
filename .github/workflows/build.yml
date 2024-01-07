@@ -174,6 +174,7 @@ jobs:
           cmake --build . --config ${{matrix.build_type}} -t vpkeditcli -- -j$(nproc)
 
       - name: Fixup Binaries
+        if: ${{ matrix.target == 'github' }}
         run: |
           chmod +x '${{env.BUILD_DIR}}/vpkedit'
 
