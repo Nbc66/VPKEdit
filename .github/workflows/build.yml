@@ -79,6 +79,19 @@ jobs:
             ${{env.BUILD_DIR}}/tls/*.dll
           retention-days: 7
 
+      - name: Upload Strata Source GUI
+        if: ${{ matrix.build_type == 'Release' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: VPKEdit-Windows-Strata-Source-GUI-msvc-${{matrix.build_type}}
+          path: |
+            ${{env.BUILD_DIR}}/vpkedit.exe
+            ${{env.BUILD_DIR}}/vtflib.dll
+            ${{env.BUILD_DIR}}/Qt6OpenGL.dll
+            ${{env.BUILD_DIR}}/Qt6OpenGLWidgets.dll
+            ${{env.BUILD_DIR}}/opengl32sw.dll
+          retention-days: 7
+
       - name: Create Installer
         working-directory: ${{env.BUILD_DIR}}
         run: cpack
@@ -187,6 +200,18 @@ jobs:
             ${{env.BUILD_DIR}}/wayland-graphics-integration-client/*.so*
             ${{env.BUILD_DIR}}/wayland-shell-integration/*.so*
             ${{env.BUILD_DIR}}/xcbglintegrations/*.so*
+          retention-days: 7
+
+      - name: Upload Strata Source GUI
+        if: ${{ matrix.compiler == 'gcc' && matrix.build_type == 'Release' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: VPKEdit-Linux-Strata-Source-GUI-${{matrix.compiler}}-${{matrix.build_type}}
+          path: |
+            ${{env.BUILD_DIR}}/vpkedit
+            ${{env.BUILD_DIR}}/vtflib.so*
+            ${{env.BUILD_DIR}}/Qt6OpenGL.so*
+            ${{env.BUILD_DIR}}/Qt6OpenGLWidgets.so*
           retention-days: 7
 
       - name: Create Installer
