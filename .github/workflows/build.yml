@@ -52,11 +52,11 @@ jobs:
         if: ${{ matrix.target == 'strata' }}
         shell: cmd
         run: |
-          curl -L https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz -o qt6.tar.gz
+          curl -L "https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz" -o qt6.tar.gz
           7z x qt6.tar.gz
           7z x qt6.tar
-          mkdir ${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}
-          move ${{github.workspace}}/opt/qt6 ${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/msvc2019_64
+          mkdir "${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}"
+          move "${{github.workspace}}/opt/qt6" "${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/msvc2019_64"
 
       - name: Configure CMake
         run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/msvc2019_64"
@@ -160,10 +160,10 @@ jobs:
         if: ${{ matrix.target == 'strata' }}
         shell: bash
         run: |
-          curl -L https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz -o qt6.tar.gz
+          curl -L "https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz" -o qt6.tar.gz
           tar -xzf qt6.tar.gz
-          mkdir -p ${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}
-          mv ${{github.workspace}}/opt/qt6 ${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/gcc_64
+          mkdir -p "${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}"
+          mv "${{github.workspace}}/opt/qt6" "${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/gcc_64"
 
       - name: Configure CMake
         run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/gcc_64"
