@@ -18,6 +18,7 @@ jobs:
       matrix:
         target: [github, strata]
         build_type: [Debug, Release]
+        compiler: [msvc]
     runs-on: windows-latest
     defaults:
       run:
@@ -49,12 +50,9 @@ jobs:
 
       - name: Install Strata Qt
         if: ${{ matrix.target == 'strata' }}
-        uses: suisei-cn/actions-download-file@v1
-        with:
-          url: https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz
-          target: ${{github.workspace}}
-      - shell: cmd
+        shell: cmd
         run: |
+          curl -L https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz -o qt6.tar.gz
           7z x qt6.tar.gz
           7z x qt6.tar
           move ${{github.workspace}}/opt/qt6 ${{github.workspace}}/qt
@@ -72,7 +70,7 @@ jobs:
         if: ${{ matrix.target == 'github' }}
         uses: actions/upload-artifact@v3
         with:
-          name: VPKEdit-Windows-Standalone-CLI-msvc-${{matrix.build_type}}
+          name: VPKEdit-Windows-Standalone-CLI-${{matrix.compiler}}-${{matrix.build_type}}
           path: |
             ${{env.BUILD_DIR}}/CREDITS.md
             ${{env.BUILD_DIR}}/LICENSE
@@ -83,7 +81,7 @@ jobs:
         if: ${{ matrix.target == 'github' }}
         uses: actions/upload-artifact@v3
         with:
-          name: VPKEdit-Windows-Standalone-GUI-msvc-${{matrix.build_type}}
+          name: VPKEdit-Windows-Standalone-GUI-${{matrix.compiler}}-${{matrix.build_type}}
           path: |
             ${{env.BUILD_DIR}}/CREDITS.md
             ${{env.BUILD_DIR}}/LICENSE
@@ -99,7 +97,7 @@ jobs:
         if: ${{ matrix.target == 'strata' }}
         uses: actions/upload-artifact@v3
         with:
-          name: VPKEdit-Windows-Strata-Source-GUI-msvc-${{matrix.build_type}}
+          name: VPKEdit-Windows-Strata-Source-GUI-${{matrix.compiler}}-${{matrix.build_type}}
           path: |
             ${{env.BUILD_DIR}}/vpkedit.exe
             ${{env.BUILD_DIR}}/vtflib.dll
@@ -117,7 +115,7 @@ jobs:
         if: ${{ matrix.target == 'github' }}
         uses: actions/upload-artifact@v3
         with:
-          name: VPKEdit-Windows-Installer-msvc-${{matrix.build_type}}
+          name: VPKEdit-Windows-Installer-${{matrix.compiler}}-${{matrix.build_type}}
           path: |
             ${{env.BUILD_DIR}}/VPKEdit-*-win64.exe
           retention-days: 7
@@ -127,6 +125,7 @@ jobs:
       matrix:
         target: [github, strata]
         build_type: [Debug, Release]
+        compiler: [gcc]
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout Repository
@@ -160,7 +159,7 @@ jobs:
         if: ${{ matrix.target == 'strata' }}
         shell: bash
         run: |
-          curl https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz -o qt6.tar.gz
+          curl -L https://github.com/StrataSource/qtbase/releases/latest/download/qt6.tar.gz -o qt6.tar.gz
           tar -xzf qt6.tar.gz
           mv ${{github.workspace}}/opt/qt6 ${{github.workspace}}/qt
 
