@@ -73,6 +73,7 @@ jobs:
       - name: Build Binaries
         working-directory: '${{env.BUILD_DIR}}'
         run: |
+          ls -a
           cmake --build . --config ${{matrix.build_type}} -t vpkeditcli -- -j%NUMBER_OF_PROCESSORS%
           cmake --build . --config ${{matrix.build_type}} -t vpkedit -- -j%NUMBER_OF_PROCESSORS%
 
