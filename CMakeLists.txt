@@ -107,6 +107,49 @@ function(vpkedit_configure_target TARGET)
             target_link_options(
                     ${TARGET} PRIVATE
                     "/ENTRY:mainCRTStartup")
+			# Define the source files and folders to copy
+			set(FILES_TO_COPY
+				${CMAKE_BINARY_DIR}/imageformats
+				${CMAKE_BINARY_DIR}/platforms
+				${CMAKE_BINARY_DIR}/styles
+				${CMAKE_BINARY_DIR}/tls
+				${CMAKE_BINARY_DIR}/Qt6Core.dll
+				${CMAKE_BINARY_DIR}/Qt6Gui.dll
+				${CMAKE_BINARY_DIR}/Qt6Network.dll
+				${CMAKE_BINARY_DIR}/Qt6OpenGL.dll
+				${CMAKE_BINARY_DIR}/Qt6OpenGLWidgets.dll
+				${CMAKE_BINARY_DIR}/Qt6Svg.dll
+				${CMAKE_BINARY_DIR}/Qt6Widgets.dll
+				${CMAKE_BINARY_DIR}/opengl32sw.dll
+			)
+			
+			# Define the target directory using $<CONFIG> to dynamically handle configurations like Debug/Release
+			set(TARGET_DIR "${CMAKE_BINARY_DIR}/$<CONFIG>")
+			
+			# Add a custom command to copy the files and directories after the build
+			add_custom_command(
+			TARGET vpkedit POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E make_directory ${TARGET_DIR}  # Ensure the target directory exists
+			COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/imageformats ${TARGET_DIR}/imageformats  # Copy directory
+			COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/platforms ${TARGET_DIR}/platforms  # Copy directory
+			COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/styles ${TARGET_DIR}/styles  # Copy directory
+			COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/tls ${TARGET_DIR}/tls  # Copy directory
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6Core.dll ${TARGET_DIR}/Qt6Core.dll  # Copy files
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6Gui.dll ${TARGET_DIR}/Qt6Gui.dll  # Copy files
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6Network.dll ${TARGET_DIR}/Qt6Network.dll  # Copy files
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6OpenGL.dll ${TARGET_DIR}/Qt6OpenGL.dll  # Copy files
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6OpenGLWidgets.dll ${TARGET_DIR}/Qt6OpenGLWidgets.dll  # Copy files
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6Svg.dll ${TARGET_DIR}/Qt6Svg.dll  # Copy files
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6Widgets.dll ${TARGET_DIR}/Qt6Widgets.dll  # Copy files
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/opengl32sw.dll ${TARGET_DIR}/opengl32sw.dll  # Copy files
+			)
+			
+			set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT vpkedit)
+			set_target_properties(vpkedit PROPERTIES
+				VS_DEBUGGER_COMMAND "$<TARGET_FILE:vpkedit>"
+				VS_DEBUGGER_WORKING_DIRECTORY "$<$<CONFIG:Debug>:${CMAKE_CURRENT_BINARY_DIR}/Debug>$<$<CONFIG:Release>:${CMAKE_CURRENT_BINARY_DIR}/Release>"
+			)
+
         endif()
     endif()
 endfunction()
