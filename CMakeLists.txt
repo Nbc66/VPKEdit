@@ -107,24 +107,22 @@ function(vpkedit_configure_target TARGET)
             target_link_options(
                     ${TARGET} PRIVATE
                     "/ENTRY:mainCRTStartup")
-			# Define the source files and folders to copy
-			set(FILES_TO_COPY
-				${CMAKE_BINARY_DIR}/imageformats
-				${CMAKE_BINARY_DIR}/platforms
-				${CMAKE_BINARY_DIR}/styles
-				${CMAKE_BINARY_DIR}/tls
-				${CMAKE_BINARY_DIR}/Qt6Core.dll
-				${CMAKE_BINARY_DIR}/Qt6Gui.dll
-				${CMAKE_BINARY_DIR}/Qt6Network.dll
-				${CMAKE_BINARY_DIR}/Qt6OpenGL.dll
-				${CMAKE_BINARY_DIR}/Qt6OpenGLWidgets.dll
-				${CMAKE_BINARY_DIR}/Qt6Svg.dll
-				${CMAKE_BINARY_DIR}/Qt6Widgets.dll
-				${CMAKE_BINARY_DIR}/opengl32sw.dll
-			)
 			
 			# Define the target directory using $<CONFIG> to dynamically handle configurations like Debug/Release
 			set(TARGET_DIR "${CMAKE_BINARY_DIR}/$<CONFIG>")
+			
+						# Define the source files and folders to copy
+			if(EXISTS "${CMAKE_BINARY_DIR}/Qt6Cored.dll")
+				add_custom_command(
+					TARGET vpkedit POST_BUILD
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6Cored.dll ${TARGET_DIR}/Qt6Core.dll  # Copy file if it exists
+				)
+			else()
+				add_custom_command(
+					TARGET vpkedit POST_BUILD
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6Core.dll ${TARGET_DIR}/Qt6Core.dll  # Copy file if it exists
+				)
+			endif()
 			
 			# Add a custom command to copy the files and directories after the build
 			add_custom_command(
@@ -134,7 +132,6 @@ function(vpkedit_configure_target TARGET)
 			COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/platforms ${TARGET_DIR}/platforms  # Copy directory
 			COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/styles ${TARGET_DIR}/styles  # Copy directory
 			COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/tls ${TARGET_DIR}/tls  # Copy directory
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6Core.dll ${TARGET_DIR}/Qt6Core.dll  # Copy files
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6Gui.dll ${TARGET_DIR}/Qt6Gui.dll  # Copy files
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6Network.dll ${TARGET_DIR}/Qt6Network.dll  # Copy files
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/Qt6OpenGL.dll ${TARGET_DIR}/Qt6OpenGL.dll  # Copy files
