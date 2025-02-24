@@ -1,7 +1,7 @@
 name: Build
 on:
   push:
-    branches: [main]
+    branches: [main, ghaction-test]
   pull_request:
     branches: [main]
   workflow_dispatch:
