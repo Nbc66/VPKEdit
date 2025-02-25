@@ -111,24 +111,25 @@ function(vpkedit_configure_target TARGET)
 				# Define the target directory using $<CONFIG> to dynamically handle configurations like Debug/Release
 				set(TARGET_DIR "${CMAKE_BINARY_DIR}/$<CONFIG>")
 				
-				function(get_dll_filename base_name)
-					if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-						set(result "${base_name}d.dll")  # Add 'd' for Debug
-					else()
-						set(result "${base_name}.dll")  # Default to regular DLL for Release
-					endif()
-					set(${base_name}_DLL_NAME ${result} PARENT_SCOPE)
-				endfunction()
+				set(QT_DLLS 
+					"Qt6Core"
+					"Qt6Gui"
+					"Qt6Widgets"
+					"Qt6Network"
+					"Qt6OpenGL"
+					"Qt6OpenGLWidgets"
+					"Qt6Svg"
+				)
 				
-				# Call the function for each DLL you need to copy
-				get_dll_filename("Qt6Core")
-				get_dll_filename("Qt6Gui")
-				get_dll_filename("Qt6Network")
-				get_dll_filename("Qt6OpenGL")
-				get_dll_filename("Qt6OpenGLWidgets")
-				get_dll_filename("Qt6Svg")
-				get_dll_filename("Qt6Widgets")
-				get_dll_filename("opengl32sw")
+				foreach(dll_name ${QT_DLLS})
+					add_custom_command(
+						TARGET vpkedit
+						POST_BUILD
+						COMMAND ${CMAKE_COMMAND} -E copy_if_different
+							"${CMAKE_BINARY_DIR}/$<IF:$<CONFIG:Debug>,${dll_name}d.dll,${dll_name}.dll>"
+							"${TARGET_DIR}/$<IF:$<CONFIG:Debug>,${dll_name}d.dll,${dll_name}.dll>"
+					)
+				endforeach()
 				
 				# Add a custom command to copy the files and directories after the build
 				add_custom_command(
@@ -138,14 +139,7 @@ function(vpkedit_configure_target TARGET)
 					COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/platforms ${TARGET_DIR}/platforms  # Copy directory
 					COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/styles ${TARGET_DIR}/styles  # Copy directory
 					COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/tls ${TARGET_DIR}/tls  # Copy directory
-					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/${Qt6Core_DLL_NAME} ${TARGET_DIR}/${Qt6Core_DLL_NAME}  # Copy Qt6Core.dll or Qt6Cored.dll based on build type
-					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/${Qt6Gui_DLL_NAME} ${TARGET_DIR}/${Qt6Gui_DLL_NAME}  # Copy Qt6Gui.dll or Qt6Guid.dll based on build type
-					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/${Qt6Network_DLL_NAME} ${TARGET_DIR}/${Qt6Network_DLL_NAME}  # Copy Qt6Network.dll or Qt6Networkd.dll based on build type
-					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/${Qt6OpenGL_DLL_NAME} ${TARGET_DIR}/${Qt6OpenGL_DLL_NAME}  # Copy Qt6OpenGL.dll or Qt6OpenGLd.dll based on build type
-					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/${Qt6OpenGLWidgets_DLL_NAME} ${TARGET_DIR}/${Qt6OpenGLWidgets_DLL_NAME}  # Copy Qt6OpenGLWidgets.dll or Qt6OpenGLWidgetsd.dll based on build type
-					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/${Qt6Svg_DLL_NAME} ${TARGET_DIR}/${Qt6Svg_DLL_NAME}  # Copy Qt6Svg.dll or Qt6Svgd.dll based on build type
-					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/${Qt6Widgets_DLL_NAME} ${TARGET_DIR}/${Qt6Widgets_DLL_NAME}  # Copy Qt6Widgets.dll or Qt6Widgetsd.dll based on build type
-					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/${opengl32sw_DLL_NAME} ${TARGET_DIR}/${opengl32sw_DLL_NAME}  # Copy opengl32sw.dll or opengl32swd.dll based on build type
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/opengl32sw.dll ${TARGET_DIR}/opengl32sw.dll  # Copy opengl32sw.dll no debug for this one
 				)
 				
 				set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT vpkedit)
